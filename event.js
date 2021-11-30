@@ -6,7 +6,7 @@ const eventSchema = new Schema({
   venue_name: String,
   address: String,
   description: String,
-  location: String,
+  type: String,
   artist: {
     type: Schema.Types.ObjectId,
     ref: 'Artist'
