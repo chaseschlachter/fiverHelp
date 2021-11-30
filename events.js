@@ -1,5 +1,5 @@
 // here is the function I need help with
-// the query starting on line 12 should return two values: 1) totalGuests & 2) attendedGuests 
+// the query starting on line 12 needs to return two values: 1) totalGuests & 2) attendedGuests 
 // the valuables should come back and be held in variables outside the query so I can display those on the client
 
 module.exports.showEvent = async(req, res,) => {
