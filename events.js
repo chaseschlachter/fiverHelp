@@ -9,6 +9,8 @@ module.exports.showEvent = async(req, res,) => {
         return res.redirect('/events');
     }
     res.render('events/show', { event });
+    const { guest_id } = req.cookies;
+    console.log(guest_id);
     const lookUp = Event.collection.find({ _id: req.params.id},
       {
         _id: 1,
@@ -31,4 +33,5 @@ module.exports.showEvent = async(req, res,) => {
           }
         }
       });
-};
+    console.log(lookUp);
+}
