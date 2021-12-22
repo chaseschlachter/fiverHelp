@@ -1,37 +1,49 @@
-// here is the function I need help with
-// the query starting on line 12 needs to return two values: 1) totalGuests & 2) attendedGuests 
-// the valuables should come back and be held in variables outside the query so I can display those on the client
 
-module.exports.showEvent = async(req, res,) => {
-    const event = await Event.findById(req.params.id).populate('artist');
-    if (!event) {
-        req.flash('error', 'Cannot find that Event');
-        return res.redirect('/events');
-    }
-    res.render('events/show', { event });
+module.exports.showEvent = async (req, res) => {
+	const event = await Event.findById(req.params.id).populate('artist');
     const { guest_id } = req.cookies;
-    console.log(guest_id);
-    const lookUp = Event.collection.find({ _id: req.params.id},
-      {
-        _id: 1,
-        name: 1,
-        guests: 1,
-        totalGuests: {
-          $size: "$guests"
-        },
-        attendedGuests: {
-          $size: {
-            "$filter": {
-              input: "$guests",
-              cond: {
-                $eq: [
-                  "$$this.attended",
-                  "Y"
-                ]
-              }
-            }
-          }
-        }
-      });
-    console.log(lookUp);
-}
+    const eventIdCookie = req.cookies.event_id;
+    let totalGuests = 0;
+	let attendedGuests = 0;
+	const eventData = await Event.aggregate([
+		{
+			"$match": {
+				"_id": objectId(req.params.id)
+			}
+		},
+		{
+			$project: {
+				_id: 1,
+				name: 1,
+				guests: 1,
+				totalGuests: { $cond: { if: { $isArray: "$guests" }, then: { $size: "$guests" }, else: "NA" } },
+				attendedGuests: {
+					$size: {
+						$filter: {
+							input: "$guests",
+							as: "guest",
+							cond: {
+								$and: [{
+									$eq: ["$$guest.attended", "Y"]
+								}]
+							}
+						}
+					}
+				}
+			}
+		}
+	])
+	if (eventData && Array.isArray(eventData) && eventData.length > 0) {
+		totalGuests = eventData[0].totalGuests;
+		attendedGuests = eventData[0].attendedGuests;
+	}
+	if (!event) {
+		req.flash('error', 'Cannot find that Event');
+		return res.redirect('/events');
+	}
+    const guestSignups = JSON.stringify(totalGuests);
+    const guestAttends = JSON.stringify(attendedGuests);
+    const date = Date().toString();
+    const currentDateParse = Date.parse(date);
+    res.render('events/show', { event, guestAttends, guestSignups, currentDateParse, eventIdCookie });
+};
